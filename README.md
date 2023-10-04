@@ -1,1 +1,0 @@
-# kalypso_input_verifier
