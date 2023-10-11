@@ -1,4 +1,5 @@
 use warp::Filter;
+use ethers::abi;
 use serde::Deserialize;
 use dotenv::dotenv;
 use warp::reply::Json;
@@ -6,7 +7,8 @@ use libzeropool_zkbob::{
     POOL_PARAMS,
     fawkes_crypto::{
         engines::bn256::Fr,
-        native::poseidon::poseidon_merkle_proof_root 
+        native::poseidon::poseidon_merkle_proof_root,
+        ff_uint::Num
     }, 
     native::{tx::{TransferSec, TransferPub, self}, key, params::PoolParams}, 
 };
@@ -39,7 +41,6 @@ async fn verify_handler(payload: InputPayload) -> Result<Json, warp::Rejection> 
     // Middleware: You can add your logic here
     let zkb_market = std::env::var("ZKB_MARKET").unwrap().as_bytes();
     let mut response = serde_json::json!({});
-    println!("Result: 0");
 
     match payload.market_id {
         zkb_market => {
@@ -71,17 +72,33 @@ fn into_zkbob_secret(decoded_secret: String) -> Result<TransferSec<Fr>, Box<dyn 
 }
 
 fn into_zkbob_pub_input(decoded_pub_input: String) -> Result<TransferPub<Fr>, Box<dyn Error>> {
-    let public_value: Value = serde_json::from_str(&decoded_pub_input).unwrap();
+    // decoding public input
+    let data_type = [
+        abi::param_type::ParamType::Uint(32),
+        abi::param_type::ParamType::Uint(32),
+        abi::param_type::ParamType::Uint(32),
+        abi::param_type::ParamType::Uint(32),
+        abi::param_type::ParamType::Uint(32),
+    ];
+    let public_input: Vec<abi::Token> = abi::decode(&data_type, decoded_pub_input.as_bytes()).unwrap();
+
+    // parsing data into correct input format
+    let public_vec: Vec<_> = public_input.into_iter().map(|e| e.to_string()).collect();
+    let public_value = serde_json::json!({
+        "root": public_vec[0],
+        "nullifier": public_vec[1],
+        "out_commit": public_vec[2],
+        "delta": public_vec[3],
+        "memo": public_vec[4]
+    });
     let zkbob_pub_input: TransferPub<Fr> = serde_json::from_value(public_value).unwrap();
+    // println!("ZKBOB public input: {:?}", zkbob_pub_input);
 
     Ok(zkbob_pub_input)
 }
 
 fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Box<dyn Error>> {
-    let mut result = true;
-    // println!("Public part {:?}", payload.public);
-    // println!("Private part {:?}", payload.private);
-    // println!("Market {:?}", payload.market_id);
+    let mut result = false;
     let zkbob_public = into_zkbob_pub_input(payload.public).unwrap();
     let zkbob_secret = into_zkbob_secret(payload.private).unwrap();
 
@@ -98,6 +115,8 @@ fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Box<dyn Error>> {
     let _eta = key::derive_key_eta(zkbob_secret.eddsa_a, &POOL_PARAMS.clone());
 
     let out_commit = tx::out_commitment_hash(&out_hash, &POOL_PARAMS.clone());
+    // println!("Out commit calculated: {:?}", out_commit);
+
     // let nullifier = tx::nullifier(in_account_hash, eta, inproof_path, &POOL_PARAMS.clone());
     let root = poseidon_merkle_proof_root(in_account_hash, &inproof, &POOL_PARAMS.compress());
 
@@ -106,7 +125,7 @@ fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Box<dyn Error>> {
     if out_commit == zkbob_public.out_commit && root == zkbob_public.root {
         result = true;
     }
-    // println!("Result: {:?}", result);
+    println!("Result: {:?}", result);
     Ok(result)
 }
 
