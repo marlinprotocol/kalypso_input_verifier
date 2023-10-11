@@ -7,8 +7,7 @@ use libzeropool_zkbob::{
     POOL_PARAMS,
     fawkes_crypto::{
         engines::bn256::Fr,
-        native::poseidon::poseidon_merkle_proof_root,
-        ff_uint::Num
+        native::poseidon::poseidon_merkle_proof_root
     }, 
     native::{tx::{TransferSec, TransferPub, self}, key, params::PoolParams}, 
 };
