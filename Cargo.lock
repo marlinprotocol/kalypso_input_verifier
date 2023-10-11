@@ -2212,6 +2212,7 @@ version = "0.1.0"
 dependencies = [
  "dotenv",
  "ethers",
+ "hex 0.4.3",
  "libzeropool-zkbob",
  "serde",
  "serde_json",
