@@ -1,12 +1,12 @@
 use actix_web::{
-    error, get,
+    error,
     http::{header::ContentType, StatusCode},
-    App, HttpResponse,
+    HttpResponse,
 };
 use derive_more::{Display, Error};
 
 #[derive(Debug, Display, Error)]
-pub enum MarketError {
+pub enum InputError {
     #[display(fmt = "file not found")]
     FileNotFound,
 
@@ -15,9 +15,12 @@ pub enum MarketError {
 
     #[display(fmt = "invalid market")]
     InvalidMarket,
+
+    #[display(fmt = "payload not valid")]
+    PayloadNotValid,
 }
 
-impl error::ResponseError for MarketError {
+impl error::ResponseError for InputError {
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(self.status_code())
             .insert_header(ContentType::html())
@@ -26,14 +29,10 @@ impl error::ResponseError for MarketError {
 
     fn status_code(&self) -> StatusCode {
         match *self {
-            MarketError::FileNotFound => StatusCode::NOT_FOUND,
-            MarketError::BadConfigData => StatusCode::NOT_ACCEPTABLE,
-            MarketError::InvalidMarket => StatusCode::NOT_IMPLEMENTED,
+            InputError::FileNotFound => StatusCode::NOT_FOUND,
+            InputError::BadConfigData => StatusCode::NOT_ACCEPTABLE,
+            InputError::InvalidMarket => StatusCode::NOT_IMPLEMENTED,
+            InputError::PayloadNotValid => StatusCode::BAD_REQUEST,
         }
     }
-}
-
-#[get("/")]
-async fn index() -> Result<&'static str, MarketError> {
-    Err(MarketError::BadConfigData)
 }

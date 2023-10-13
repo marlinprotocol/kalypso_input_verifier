@@ -1,12 +1,9 @@
 use actix_web::{
     web,
-    get, 
     post, 
     App, 
     HttpResponse, 
     HttpServer, 
-    Responder, 
-    error::Error,
 };
 use std::fs;
 
@@ -24,24 +21,19 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
 #[post("/verifyPublicAndPrivateInputs")]
-async fn verify_handler(payload: web::Json<helpers::input::InputPayload>) -> Result<HttpResponse, Error> {
+async fn verify_handler(payload: web::Json<helpers::input::InputPayload>) -> Result<HttpResponse, helpers::error::InputError> {
     let file_contents = match fs::read_to_string("supported_markets.json") {
         Ok(content) => content,
         Err(_) => {
-            return Ok(HttpResponse::BadRequest().body("Error reading supported markets: No File"));
+            return Err(helpers::error::InputError::FileNotFound)
         }
     };
 
     let supported_markets: Vec<String> = match serde_json::from_str(&file_contents) {
         Ok(market_ids) => market_ids,
         Err(_) => {
-            return Ok(HttpResponse::BadRequest().body("Error reading supported markets: Incorrect Config"));
+            return Err(helpers::error::InputError::BadConfigData)
         }
     };
 
@@ -60,12 +52,12 @@ async fn verify_handler(payload: web::Json<helpers::input::InputPayload>) -> Res
 
         if market_id_array == payload.clone().market_id {
             if zkb_inputs::verify_zkbob_secret(payload.clone()).unwrap() {
-                HttpResponse::Ok().body("Payload is valid");
+                return Ok(HttpResponse::Ok().body("Payload is valid"));
             } else {
-                HttpResponse::BadRequest().body("Payload is not valid");
+                return Err(helpers::error::InputError::PayloadNotValid);
             }
         }
     }
 
-    Ok(HttpResponse::BadRequest().body("Market is not implemented"))
+    return Err(helpers::error::InputError::InvalidMarket)
 }
