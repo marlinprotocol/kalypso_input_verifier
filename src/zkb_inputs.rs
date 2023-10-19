@@ -1,6 +1,6 @@
 use crate::helpers::input::InputPayload;
 use actix_web::error::Error;
-use hex;
+
 use libzeropool_zkbob::{
     fawkes_crypto::{engines::bn256::Fr, native::poseidon::poseidon_merkle_proof_root},
     native::{
@@ -50,7 +50,7 @@ fn into_zkbob_pub_input(decoded_pub_input: String) -> Result<TransferPub<Fr>, Er
         }
     }
 
-    let decoded_pub_input_bytes = hex::decode(&decoded_pub_input).unwrap();
+    let decoded_pub_input_bytes = hex::decode(decoded_pub_input).unwrap();
     let public = decode_input(decoded_pub_input_bytes.into()).unwrap();
     let public_value = json!({
         "root": public[0].to_string(),
@@ -90,13 +90,13 @@ pub fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Error> {
         .iter()
         .map(|n| n.hash(&POOL_PARAMS.clone()))
         .collect::<Vec<_>>();
-    let _in_hash = [[in_account_hash.clone()].as_ref(), in_note_hash.as_slice()].concat();
+    let _in_hash = [[in_account_hash].as_ref(), in_note_hash.as_slice()].concat();
     let inproof = zkbob_secret.in_proof.0;
     let _eta = key::derive_key_eta(zkbob_secret.eddsa_a, &POOL_PARAMS.clone());
 
     let out_commit = tx::out_commitment_hash(&out_hash, &POOL_PARAMS.clone());
     // let nullifier = tx::nullifier(in_account_hash, eta, inproof.path.into(), &POOL_PARAMS.clone());
-    let root = poseidon_merkle_proof_root(in_account_hash, &inproof, &POOL_PARAMS.compress());
+    let root = poseidon_merkle_proof_root(in_account_hash, &inproof, POOL_PARAMS.compress());
 
     // let tx_hash = tx::tx_hash(&in_hash, zkbob_public.out_commit, &POOL_PARAMS.clone());
 

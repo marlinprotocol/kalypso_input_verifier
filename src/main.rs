@@ -48,5 +48,5 @@ async fn verify_handler(
         }
     }
 
-    return Err(helpers::error::InputError::InvalidMarket);
+    Err(helpers::error::InputError::InvalidMarket)
 }
