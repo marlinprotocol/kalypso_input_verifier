@@ -90,9 +90,9 @@ pub fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Error> {
         .iter()
         .map(|n| n.hash(&POOL_PARAMS.clone()))
         .collect::<Vec<_>>();
-    let in_hash = [[in_account_hash.clone()].as_ref(), in_note_hash.as_slice()].concat();
+    let _in_hash = [[in_account_hash.clone()].as_ref(), in_note_hash.as_slice()].concat();
     let inproof = zkbob_secret.in_proof.0;
-    let eta = key::derive_key_eta(zkbob_secret.eddsa_a, &POOL_PARAMS.clone());
+    let _eta = key::derive_key_eta(zkbob_secret.eddsa_a, &POOL_PARAMS.clone());
 
     let out_commit = tx::out_commitment_hash(&out_hash, &POOL_PARAMS.clone());
     // let nullifier = tx::nullifier(in_account_hash, eta, inproof.path.into(), &POOL_PARAMS.clone());
