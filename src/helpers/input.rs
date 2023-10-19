@@ -1,11 +1,5 @@
-use serde::{Serialize, Deserialize};
-use actix_web::{ 
-    HttpRequest, 
-    HttpResponse,  
-    Responder, 
-    body::BoxBody, 
-    http::header::ContentType
-};
+use actix_web::{body::BoxBody, http::header::ContentType, HttpRequest, HttpResponse, Responder};
+use serde::{Deserialize, Serialize};
 
 // The payload for the POST request
 #[derive(Debug, Serialize, Deserialize, Clone)]

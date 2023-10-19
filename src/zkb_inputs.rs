@@ -1,3 +1,5 @@
+use crate::helpers::input::InputPayload;
+use actix_web::error::Error;
 use hex;
 use libzeropool_zkbob::{
     fawkes_crypto::{engines::bn256::Fr, native::poseidon::poseidon_merkle_proof_root},
@@ -8,9 +10,7 @@ use libzeropool_zkbob::{
     },
     POOL_PARAMS,
 };
-use actix_web::error::Error;
 use serde_json::{json, Value};
-use crate::helpers::input::InputPayload;
 
 fn into_zkbob_secret(decoded_secret: String) -> Result<TransferSec<Fr>, Error> {
     let decoded_secret_bytes = hex::decode(decoded_secret).unwrap();

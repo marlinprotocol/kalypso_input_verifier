@@ -1,10 +1,4 @@
-use actix_web::{
-    web,
-    post, 
-    App, 
-    HttpResponse, 
-    HttpServer, 
-};
+use actix_web::{post, web, App, HttpResponse, HttpServer};
 use std::fs;
 
 mod helpers;
@@ -12,29 +6,24 @@ mod zkb_inputs;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .service(verify_handler)
-    })
-    .bind(("127.0.0.1", 3030))?
-    .run()
-    .await
+    HttpServer::new(|| App::new().service(verify_handler))
+        .bind(("127.0.0.1", 3030))?
+        .run()
+        .await
 }
 
 #[post("/verifyPublicAndPrivateInputs")]
-async fn verify_handler(payload: web::Json<helpers::input::InputPayload>) -> Result<HttpResponse, helpers::error::InputError> {
+async fn verify_handler(
+    payload: web::Json<helpers::input::InputPayload>,
+) -> Result<HttpResponse, helpers::error::InputError> {
     let file_contents = match fs::read_to_string("supported_markets.json") {
         Ok(content) => content,
-        Err(_) => {
-            return Err(helpers::error::InputError::FileNotFound)
-        }
+        Err(_) => return Err(helpers::error::InputError::FileNotFound),
     };
 
     let supported_markets: Vec<String> = match serde_json::from_str(&file_contents) {
         Ok(market_ids) => market_ids,
-        Err(_) => {
-            return Err(helpers::error::InputError::BadConfigData)
-        }
+        Err(_) => return Err(helpers::error::InputError::BadConfigData),
     };
 
     for market_id_hex in &supported_markets {
@@ -59,5 +48,5 @@ async fn verify_handler(payload: web::Json<helpers::input::InputPayload>) -> Res
         }
     }
 
-    return Err(helpers::error::InputError::InvalidMarket)
+    return Err(helpers::error::InputError::InvalidMarket);
 }
