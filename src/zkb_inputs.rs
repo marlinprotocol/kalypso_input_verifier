@@ -1,6 +1,11 @@
 use hex;
 use libzeropool_zkbob::{
-    fawkes_crypto::{engines::bn256::Fr, native::poseidon::poseidon_merkle_proof_root},
+    fawkes_crypto::{
+        ff_uint::Num,
+        engines::bn256::Fr, 
+        native::poseidon::poseidon_merkle_proof_root, 
+        core::sizedvec::SizedVec
+    },
     native::{
         key,
         params::PoolParams,
@@ -95,13 +100,38 @@ pub fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Error> {
     let eta = key::derive_key_eta(zkbob_secret.eddsa_a, &POOL_PARAMS.clone());
 
     let out_commit = tx::out_commitment_hash(&out_hash, &POOL_PARAMS.clone());
-    // let nullifier = tx::nullifier(in_account_hash, eta, inproof.path.into(), &POOL_PARAMS.clone());
     let root = poseidon_merkle_proof_root(in_account_hash, &inproof, &POOL_PARAMS.compress());
+    let path_num = from_bool_to_num(inproof.path).unwrap();
+    let nullifier = tx::nullifier(in_account_hash, eta, path_num, &POOL_PARAMS.clone());
+    let tx_hash = tx::tx_hash(&in_hash, zkbob_public.out_commit, &POOL_PARAMS.clone());
 
-    // let tx_hash = tx::tx_hash(&in_hash, zkbob_public.out_commit, &POOL_PARAMS.clone());
-
-    if out_commit == zkbob_public.out_commit && root == zkbob_public.root {
+    if out_commit == zkbob_public.out_commit && root == zkbob_public.root && nullifier == zkbob_public.nullifier {
         result = true;
+        println!("Result: {:?}", result);
+    } else {
+        println!("Result: {:?}", result);
     }
     Ok(result)
 }
+
+pub fn from_bool_to_num(path: SizedVec<bool, 48>) -> Result<Num<Fr>, Error> {
+    let mut acc: Num<Fr> = path[0].into();
+    let mut k = Num::ONE;
+    for n in 1..48 {
+        k = k.double();
+        let num: Num<Fr> = path[n].into();
+        acc += k * num;
+    }
+    Ok(acc)
+}
+
+// pub fn c_from_bits_le<C: CS>(bits: &[CBool<C>]) -> CNum<C> {
+//     assert!(bits.len() > 0, "should be positive number of bits");
+//     let mut acc = bits[0].to_num();
+//     let mut k = Num::ONE;
+//     for i in 1..bits.len() {
+//         k = k.double();
+//         acc += k * bits[i].to_num();
+//     }
+//     acc
+// }
