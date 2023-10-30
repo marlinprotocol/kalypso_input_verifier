@@ -107,10 +107,8 @@ pub fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Error> {
 
     if out_commit == zkbob_public.out_commit && root == zkbob_public.root && nullifier == zkbob_public.nullifier {
         result = true;
-        println!("Result: {:?}", result);
-    } else {
-        println!("Result: {:?}", result);
     }
+    
     Ok(result)
 }
 
