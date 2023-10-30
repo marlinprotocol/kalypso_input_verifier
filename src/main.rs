@@ -40,6 +40,7 @@ async fn verify_handler(
         market_id_array.copy_from_slice(&market_id_bytes);
 
         if market_id_array == payload.clone().market_id {
+            println!("market id: {} Valid Response", hex::encode(market_id_array));
             return Ok(HttpResponse::Ok().body("Payload is valid"));
         }
     }
@@ -69,12 +70,21 @@ async fn verify_handler(
 
         if market_id_array == payload.clone().market_id {
             if zkb_inputs::verify_zkbob_secret(payload.clone()).unwrap() {
+                println!("market id: {} Valid Response", hex::encode(market_id_array));
                 return Ok(HttpResponse::Ok().body("Payload is valid"));
             } else {
+                println!(
+                    "market id: {} InValid Response",
+                    hex::encode(market_id_array)
+                );
                 return Err(helpers::error::InputError::PayloadNotValid);
             }
         }
     }
 
+    println!(
+        "market id: {} Not Supported",
+        hex::encode(payload.clone().market_id)
+    );
     Err(helpers::error::InputError::InvalidMarket)
 }
