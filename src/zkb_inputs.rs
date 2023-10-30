@@ -1,4 +1,6 @@
-use hex;
+use crate::helpers::input::InputPayload;
+use actix_web::error::Error;
+
 use libzeropool_zkbob::{
     fawkes_crypto::{
         ff_uint::Num,
@@ -13,9 +15,7 @@ use libzeropool_zkbob::{
     },
     POOL_PARAMS,
 };
-use actix_web::error::Error;
 use serde_json::{json, Value};
-use crate::helpers::input::InputPayload;
 
 fn into_zkbob_secret(decoded_secret: String) -> Result<TransferSec<Fr>, Error> {
     let decoded_secret_bytes = hex::decode(decoded_secret).unwrap();
@@ -55,7 +55,7 @@ fn into_zkbob_pub_input(decoded_pub_input: String) -> Result<TransferPub<Fr>, Er
         }
     }
 
-    let decoded_pub_input_bytes = hex::decode(&decoded_pub_input).unwrap();
+    let decoded_pub_input_bytes = hex::decode(decoded_pub_input).unwrap();
     let public = decode_input(decoded_pub_input_bytes.into()).unwrap();
     let public_value = json!({
         "root": public[0].to_string(),
@@ -95,7 +95,7 @@ pub fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Error> {
         .iter()
         .map(|n| n.hash(&POOL_PARAMS.clone()))
         .collect::<Vec<_>>();
-    let in_hash = [[in_account_hash.clone()].as_ref(), in_note_hash.as_slice()].concat();
+    let in_hash = [[in_account_hash].as_ref(), in_note_hash.as_slice()].concat();
     let inproof = zkbob_secret.in_proof.0;
     let eta = key::derive_key_eta(zkbob_secret.eddsa_a, &POOL_PARAMS.clone());
 
