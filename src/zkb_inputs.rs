@@ -103,7 +103,7 @@ pub fn verify_zkbob_secret(payload: InputPayload) -> Result<bool, Error> {
     let root = poseidon_merkle_proof_root(in_account_hash, &inproof, &POOL_PARAMS.compress());
     let path_num = from_bool_to_num(inproof.path).unwrap();
     let nullifier = tx::nullifier(in_account_hash, eta, path_num, &POOL_PARAMS.clone());
-    let tx_hash = tx::tx_hash(&in_hash, zkbob_public.out_commit, &POOL_PARAMS.clone());
+    let _tx_hash = tx::tx_hash(&in_hash, zkbob_public.out_commit, &POOL_PARAMS.clone());    
 
     if out_commit == zkbob_public.out_commit && root == zkbob_public.root && nullifier == zkbob_public.nullifier {
         result = true;
@@ -124,14 +124,3 @@ pub fn from_bool_to_num(path: SizedVec<bool, 48>) -> Result<Num<Fr>, Error> {
     }
     Ok(acc)
 }
-
-// pub fn c_from_bits_le<C: CS>(bits: &[CBool<C>]) -> CNum<C> {
-//     assert!(bits.len() > 0, "should be positive number of bits");
-//     let mut acc = bits[0].to_num();
-//     let mut k = Num::ONE;
-//     for i in 1..bits.len() {
-//         k = k.double();
-//         acc += k * bits[i].to_num();
-//     }
-//     acc
-// }
