@@ -6,14 +6,14 @@ mod zkb_inputs;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().service(verify_handler))
+    HttpServer::new(|| App::new().service(check_input))
         .bind(("127.0.0.1", 3030))?
         .run()
         .await
 }
 
-#[post("/verifyPublicAndPrivateInputs")]
-async fn verify_handler(
+#[post("/checkInput")]
+async fn check_input(
     payload: web::Json<helpers::input::InputPayload>,
 ) -> Result<HttpResponse, helpers::error::InputError> {
     let file_contents = match fs::read_to_string("skip_markets.json") {
@@ -87,4 +87,11 @@ async fn verify_handler(
         hex::encode(payload.clone().market_id)
     );
     Err(helpers::error::InputError::InvalidMarket)
+}
+
+#[post("/checkInputWithSignature")]
+async fn check_input_with_signature(
+    payload: web::Json<helpers::input::InputPayload>,
+) -> Result<HttpResponse, helpers::error::InputError> {
+    return Ok(HttpResponse::Ok().body("Payload is valid"));
 }
