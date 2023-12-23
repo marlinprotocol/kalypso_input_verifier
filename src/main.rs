@@ -16,7 +16,11 @@ async fn main() -> std::io::Result<()> {
 async fn verify_handler(
     payload: web::Json<helpers::input::InputPayload>,
 ) -> Result<HttpResponse, helpers::error::InputError> {
-    let file_contents = match fs::read_to_string("skip_markets.json") {
+    let skip_markets_config_path = "./config/skip_markets.json".to_string();
+    let alt_skip_markets_config_path = "../config/skip_markets.json".to_string();
+
+    let file_contents = match fs::read_to_string(&skip_markets_config_path)
+    .or_else(|_| fs::read_to_string(&alt_skip_markets_config_path)) {
         Ok(content) => content,
         Err(_) => return Err(helpers::error::InputError::FileNotFound),
     };
@@ -45,7 +49,11 @@ async fn verify_handler(
         }
     }
 
-    let file_contents = match fs::read_to_string("supported_markets.json") {
+    let supported_markets_config_path = "./config/supported_markets.json".to_string();
+    let alt_supported_markets_config_path = "../config/supported_markets.json".to_string();
+
+    let file_contents = match fs::read_to_string(&supported_markets_config_path)
+    .or_else(|_| fs::read_to_string(&alt_supported_markets_config_path))  {
         Ok(content) => content,
         Err(_) => return Err(helpers::error::InputError::FileNotFound),
     };
